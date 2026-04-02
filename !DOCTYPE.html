@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>귀염뽀짝 테트-고치</title>
+    <style>
+        body { background: #ffe6f2; display: flex; flex-direction: column; align-items: center; font-family: 'Courier New', sans-serif; }
+        #game-container { position: relative; border: 15px solid #ff99cc; border-radius: 60px; padding: 25px; background: #fff; box-shadow: 0 10px 0 #e68aaf; margin-top: 20px; }
+        canvas { border: 4px solid #555; background: #e0f0e0; display: block; }
+        .status-panel { display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: bold; color: #555; }
+        .controls { margin-top: 20px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        button { padding: 12px; cursor: pointer; border-radius: 15px; border: none; background: #ff99cc; color: white; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        button:hover { background: #e68aaf; transform: scale(1.05); }
+        .pause-btn { background: #ffcc00; }
+        #msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255,255,255,0.9); padding: 20px; border-radius: 20px; display: none; text-align: center; font-weight: bold; border: 3px solid #ff99cc; }
+    </style>
+</head>
+<body>
+
+    <h1>👾 테트-고치 V2 👾</h1>
+
+    <div id="game-container">
+        <div class="status-panel">
+            <div>기분: <span id="pet-mood">😐 보통</span></div>
+            <div>점수: <span id="score">0</span></div>
+        </div>
+        
+        <canvas id="tetris" width="240" height="400"></canvas>
+        <div id="msg">PAUSED<br><small>P를 눌러 해제</small></div>
+        
+        <div class="controls">
+            <button onclick="startGame(400)">쉬움</button>
+            <button onclick="startGame(200)">보통</button>
+            <button onclick="startGame(80)">매우 빠름</button>
+            <button class="pause-btn" onclick="togglePause()">일시정지 (P)</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('tetris');
+        const context = canvas.getContext('2d');
+        const moodDisplay = document.getElementById('pet-mood');
+        const scoreDisplay = document.getElementById('score');
+        const msg = document.getElementById('msg');
+
+        context.scale(20, 20);
+
+        // 7가지 다양한 블록 정의
+        function createPiece(type) {
+            if (type === 'I') return [[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]];
+            if (type === 'L') return [[0,2,0],[0,2,0],[0,2,2]];
+            if (type === 'J') return [[0,3,0],[0,3,0],[3,3,0]];
+            if (type === 'O') return [[4,4],[4,4]];
+            if (type === 'Z') return [[5,5,0],[0,5,5],[0,0,0]];
+            if (type === 'S') return [[0,6,6],[6,6,0],[0,0,0]];
+            if (type === 'T') return [[0,7,0],[7,7,7],[0,0,0]];
+        }
+
+        const colors = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877FF'];
+        const arena = Array.from({length: 20}, () => Array(12).fill(0));
+
+        const player = { pos: {x: 0, y: 0}, matrix: null, score: 0 };
+
+        let dropCounter = 0;
+        let dropInterval = 1000;
+        let lastTime = 0;
+        let paused = false;
+
+        function draw() {
+            context.fillStyle = '#e0f0e0';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            drawMatrix(arena, {x: 0, y: 0});
+            drawMatrix(player.matrix, player.pos, true);
+        }
+
+        function drawMatrix(matrix, offset, isPlayer = false) {
+            matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        // 블록 몸통
+                        context.fillStyle = colors[value];
+                        context.fillRect(x + offset.x, y + offset.y, 1, 1);
+                        context.strokeStyle = 'rgba(0,0,0,0.1)';
+                        context.strokeRect(x + offset.x, y + offset.y, 1, 1);
+                        
+                        // 다마고치 캐릭터 얼굴 추가 (눈 + 홍조)
+                        if (isPlayer) {
+                            // 눈
+                            context.fillStyle = 'black';
+                            context.fillRect(x + offset.x + 0.2, y + offset.y + 0.3, 0.15, 0.15);
+                            context.fillRect(x + offset.x + 0.65, y + offset.y + 0.3, 0.15, 0.15);
+                            // 홍조 (볼터치)
+                            context.fillStyle = 'rgba(255, 100, 100, 0.5)';
+                            context.fillRect(x + offset.x + 0.1, y + offset.y + 0.5, 0.2, 0.1);
+                            context.fillRect(x + offset.x + 0.7, y + offset.y + 0.5, 0.2, 0.1);
+                        }
+                    }
+                });
+            });
+        }
+
+        function playerDrop() {
+            if(paused) return;
+            player.pos.y++;
+            if (collide(arena, player)) {
+                player.pos.y--;
+                merge(arena, player);
+                playerReset();
+                arenaSweep();
+            }
+            dropCounter = 0;
+        }
+
+        function playerMove(dir) {
+            if(paused) return;
+            player.pos.x += dir;
+            if (collide(arena, player)) player.pos.x -= dir;
+        }
+
+        function playerRotate() {
+            if(paused) return;
+            const pos = player.pos.x;
+            let offset = 1;
+            rotate(player.matrix);
+            while (collide(arena, player)) {
+                player.pos.x += offset;
+                offset = -(offset + (offset > 0 ? 1 : -1));
+                if (offset > player.matrix[0].length) {
+                    rotate(player.matrix, -1);
+                    player.pos.x = pos;
+                    return;
+                }
+            }
+        }
+
+        function rotate(matrix) {
+            for (let y = 0; y < matrix.length; ++y) {
+                for (let x = 0; x < y; ++x) {
+                    [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+                }
+            }
+            matrix.forEach(row => row.reverse());
+        }
+
+        function collide(arena, player) {
+            const [m, o] = [player.matrix, player.pos];
+            for (let y = 0; y < m.length; ++y) {
+                for (let x = 0; x < m[y].length; ++x) {
+                    if (m[y][x] !== 0 && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) return true;
+                }
+            }
+            return false;
+        }
+
+        function merge(arena, player) {
+            player.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) arena[y + player.pos.y][x + player.pos.x] = value;
+                });
+            });
+        }
+
+        function arenaSweep() {
+            outer: for (let y = arena.length - 1; y > 0; --y) {
+                for (let x = 0; x < arena[y].length; ++x) {
+                    if (arena[y][x] === 0) continue outer;
+                }
+                const row = arena.splice(y, 1)[0].fill(0);
+                arena.unshift(row);
+                player.score += 10;
+                scoreDisplay.innerText = player.score;
+                moodDisplay.innerText = "😄 신남!";
+                setTimeout(() => moodDisplay.innerText = "😐 보통", 1000);
+            }
+        }
+
+        function playerReset() {
+            const pieces = 'ILJOTSZ';
+            player.matrix = createPiece(pieces[pieces.length * Math.random() | 0]);
+            player.pos.y = 0;
+            player.pos.x = (arena[0].length / 2 | 0) - (player.matrix[0].length / 2 | 0);
+            if (collide(arena, player)) {
+                arena.forEach(row => row.fill(0));
+                player.score = 0;
+                scoreDisplay.innerText = 0;
+                moodDisplay.innerText = "😭 으앙!";
+            }
+        }
+
+        function togglePause() {
+            paused = !paused;
+            msg.style.display = paused ? 'block' : 'none';
+        }
+
+        function update(time = 0) {
+            if (!paused) {
+                const deltaTime = time - lastTime;
+                lastTime = time;
+                dropCounter += deltaTime;
+                if (dropCounter > dropInterval) playerDrop();
+                draw();
+            } else {
+                lastTime = time; // 멈춘 동안 시간 흐름 보정
+            }
+            requestAnimationFrame(update);
+        }
+
+        function startGame(speed) {
+            dropInterval = speed;
+            paused = false;
+            msg.style.display = 'none';
+            arena.forEach(row => row.fill(0));
+            playerReset();
+            if(lastTime === 0) update();
+        }
+
+        document.addEventListener('keydown', event => {
+            if (event.keyCode === 37) playerMove(-1); // 좌
+            else if (event.keyCode === 39) playerMove(1);  // 우
+            else if (event.keyCode === 40) playerDrop();   // 하
+            else if (event.keyCode === 38) playerRotate(); // 상 (회전)
+            else if (event.keyCode === 80) togglePause();  // P (일시정지)
+        });
+
+    </script>
+</body>
+</html>

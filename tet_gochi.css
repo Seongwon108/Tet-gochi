@@ -1,0 +1,76 @@
+body {
+    background: #ffe6f2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Courier New', sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+#game-container {
+    position: relative;
+    border: 15px solid #ff99cc;
+    border-radius: 60px;
+    padding: 25px;
+    background: #fff;
+    box-shadow: 0 10px 0 #e68aaf;
+    margin-top: 20px;
+}
+
+canvas {
+    border: 4px solid #555;
+    background: #e0f0e0;
+    display: block;
+}
+
+.status-panel {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-weight: bold;
+    color: #555;
+}
+
+.controls {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+button {
+    padding: 12px;
+    cursor: pointer;
+    border-radius: 15px;
+    border: none;
+    background: #ff99cc;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+button:hover {
+    background: #e68aaf;
+    transform: scale(1.05);
+}
+
+.pause-btn {
+    background: #ffcc00;
+}
+
+#msg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 20px;
+    display: none;
+    text-align: center;
+    font-weight: bold;
+    border: 3px solid #ff99cc;
+    z-index: 10;
+}
