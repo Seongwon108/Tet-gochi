@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>멀티 미니게임 천국</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="game-machine">
+        <div id="main-menu">
+            <h1>🎮 게임 선택 🎮</h1>
+            <button class="menu-btn" onclick="showCharacterSelect()">1. 좀비 피하기 (동물 친구들)</button>
+            <button class="menu-btn" onclick="startInfiniteFall()">2. 무한 낙하 (피카츄)</button>
+        </div>
+
+        <div id="char-select" style="display:none;">
+            <h2>캐릭터를 골라주세요!</h2>
+            <div class="char-grid">
+                <button onclick="startZombieGame('🦊')">🦊 여우</button>
+                <button onclick="startZombieGame('🐻')">🐻 곰</button>
+                <button onclick="startZombieGame('🐶')">🐶 강아지</button>
+                <button onclick="startZombieGame('🐱')">🐱 고양이</button>
+            </div>
+            <button class="back-btn" onclick="showMainMenu()">뒤로가기</button>
+        </div>
+
+        <div id="game-stage" style="display:none;">
+            <div class="status-panel">
+                <span id="game-title">게임 중</span>
+                <span>점수: <span id="score">0</span></span>
+            </div>
+            <canvas id="gameCanvas" width="400" height="500"></canvas>
+            <div id="pause-msg">PAUSED<br><small>P를 눌러 해제</small></div>
+            
+            <div class="controls">
+                <div class="difficulty">
+                    <button onclick="setDifficulty(1)">쉬움</button>
+                    <button onclick="setDifficulty(2)">보통</button>
+                    <button onclick="setDifficulty(3)">어려움</button>
+                </div>
+                <button class="pause-btn" onclick="togglePause()">일시정지 (P)</button>
+                <button class="back-btn" onclick="showMainMenu()">나가기</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

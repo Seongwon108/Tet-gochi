@@ -1,0 +1,76 @@
+body {
+    background: #e3f2fd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: 'Courier New', sans-serif;
+}
+
+#game-machine {
+    width: 450px;
+    background: #ffccbc;
+    border: 12px solid #ffab91;
+    border-radius: 50px;
+    padding: 30px;
+    box-shadow: 0 15px 0 #d84315;
+    text-align: center;
+}
+
+h1, h2 { color: #4e342e; }
+
+canvas {
+    background: #e0f2f1;
+    border: 4px solid #555;
+    display: block;
+    margin: 0 auto;
+}
+
+.menu-btn, .char-grid button {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 15px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 20px;
+    background: #fff;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.menu-btn:hover { background: #ffe0b2; transform: scale(1.02); }
+
+.status-panel {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    font-weight: bold;
+}
+
+.controls { margin-top: 15px; }
+.difficulty { margin-bottom: 10px; display: flex; gap: 5px; justify-content: center; }
+
+button {
+    padding: 8px 15px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    background: #ff8a65;
+    color: white;
+}
+
+#game-stage { position: relative; }
+#pause-msg {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255,255,255,0.9);
+    padding: 20px;
+    border: 3px solid #ff8a65;
+    border-radius: 20px;
+    display: none;
+    z-index: 10;
+}
